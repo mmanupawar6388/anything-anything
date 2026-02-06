@@ -1,0 +1,92 @@
+# Production Configuration for MNIST GAN
+
+# Model Architecture (same as default)
+model:
+  latent_dim: 100
+  generator:
+    channels: [256, 128, 64, 1]
+    kernel_size: 4
+    stride: 2
+    padding: 1
+    use_batch_norm: true
+    activation: 'relu'
+  discriminator:
+    channels: [1, 64, 128, 256]
+    kernel_size: 4
+    stride: 2
+    padding: 1
+    use_batch_norm: true
+    activation: 'leaky_relu'
+    leaky_slope: 0.2
+    dropout: 0.3
+
+# Training Configuration (optimized for production)
+training:
+  batch_size: 256  # Larger batch size for stability
+  num_epochs: 200  # More epochs for better convergence
+  learning_rate:
+    generator: 0.0001  # Lower LR for stability
+    discriminator: 0.0001
+  beta1: 0.5
+  beta2: 0.999
+  label_smoothing: 0.1
+  noise_std: 0.05  # Less noise in production
+  
+  scheduler:
+    enabled: true
+    type: 'cosine'
+    step_size: 50
+    gamma: 0.5
+
+# Data Configuration
+data:
+  dataset: 'mnist'
+  data_dir: './data'
+  num_workers: 8  # More workers for faster loading
+  pin_memory: true
+  shuffle: true
+  download: true
+
+# Logging & Checkpointing
+logging:
+  log_dir: './logs/production'
+  tensorboard: true
+  log_interval: 50
+  image_interval: 200
+  num_sample_images: 100
+  
+checkpoint:
+  save_dir: './checkpoints/production'
+  save_interval: 10
+  keep_last_n: 10
+  save_best: true
+  metric: 'fid_score'
+
+# Evaluation
+evaluation:
+  num_samples: 50000  # More samples for accurate metrics
+  batch_size: 200
+  metrics:
+    - 'fid_score'
+    - 'inception_score'
+    - 'visual_quality'
+
+# Inference
+inference:
+  default_num_images: 10
+  output_dir: './outputs/production'
+  image_format: 'png'
+
+# System
+system:
+  device: 'cuda'
+  seed: 42
+  deterministic: true
+  num_threads: 8
+
+# API Configuration
+api:
+  host: '0.0.0.0'
+  port: 8000
+  workers: 8
+  max_batch_size: 200

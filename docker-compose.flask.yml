@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  mnist-gan-flask:
+    build:
+      context: .
+      dockerfile: Dockerfile.flask
+    container_name: mnist-gan-flask
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./checkpoints:/app/checkpoints:ro
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLASK_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: TensorBoard service for monitoring
+  tensorboard:
+    image: tensorflow/tensorflow:latest
+    container_name: mnist-gan-tensorboard
+    ports:
+      - "6006:6006"
+    volumes:
+      - ./logs:/logs:ro
+    command: tensorboard --logdir=/logs --host=0.0.0.0
+    restart: unless-stopped
+
+networks:
+  default:
+    name: mnist-gan-flask-network

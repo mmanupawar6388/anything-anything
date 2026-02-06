@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mnist-gan-api:
+    build: .
+    container_name: mnist-gan-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./checkpoints:/app/checkpoints:ro
+      - ./outputs:/app/outputs
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEVICE=cpu  # Change to 'cuda' if GPU available
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: TensorBoard service for monitoring
+  tensorboard:
+    image: tensorflow/tensorflow:latest
+    container_name: mnist-gan-tensorboard
+    ports:
+      - "6006:6006"
+    volumes:
+      - ./logs:/logs:ro
+    command: tensorboard --logdir=/logs --host=0.0.0.0
+    restart: unless-stopped
+
+networks:
+  default:
+    name: mnist-gan-network
